@@ -8,13 +8,31 @@ import SimpleLightbox from 'simplelightbox';
 // Додатковий імпорт стилів
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-const fetchPicturesForm = document.querySelector('.form'); // Assuming .form is the form element
+const fetchPicturesForm = document.querySelector('.form');
 const gallery = document.querySelector('.gallery');
 const userInput = document.querySelector('input');
+const containerDiv = document.querySelector('.container');
+
+// Function to show the loader
+const showLoader = () => {
+  console.log('Loader is shown');
+  const loader = document.createElement('span');
+  loader.classList.add('loader');
+  containerDiv.append(loader);
+};
+
+// Function to hide the loader
+const hideLoader = () => {
+  const loader = document.querySelector('.loader');
+  if (loader) {
+    loader.remove();
+  }
+};
 
 fetchPicturesForm.addEventListener('submit', event => {
   event.preventDefault(); // Prevent the default form submission behavior
   gallery.innerHTML = '';
+  showLoader();
   const apiKey = '41249104-77dc8b1e0563744cb8297ef15';
   const query = userInput.value;
 
@@ -38,21 +56,29 @@ fetchPicturesForm.addEventListener('submit', event => {
             'Sorry, there are no images matching your search query. Please try again!',
         });
       } else {
-        const markup = data.hits.map(data => {
-          return `<li class="gallery-item"><a href="${data.webformatURL}">
+        const markup = data.hits
+          .map(data => {
+            return `<li class="gallery-item"><a href="${data.webformatURL}">
           <img class="gallery-image" src="${data.webformatURL}" alt="${data.tags}"></a>
           <p><b>Likes: </b>${data.likes}</p>
           <p><b>Views: </b>${data.views}</p>
           <p><b>Comments: </b>${data.comments}</p>
           <p><b>Downloads: </b>${data.downloads}</p>
           </li>`;
-        });
+          })
+          .join('');
         gallery.insertAdjacentHTML('afterbegin', markup);
+        const lightbox = new SimpleLightbox('.gallery a', options);
+        lightbox.on('show.simplelightbox');
+        lightbox.refresh();
         fetchPicturesForm.reset();
       }
     })
     .catch(error => {
       console.log(error);
+    })
+    .finally(() => {
+      hideLoader();
     });
 });
 
@@ -64,7 +90,3 @@ const options = {
   captionPosition: 'bottom',
   animation: 250,
 };
-
-const lightbox = new SimpleLightbox('.gallery a', options);
-lightbox.on('show.simplelightbox');
-lightbox.refresh();
